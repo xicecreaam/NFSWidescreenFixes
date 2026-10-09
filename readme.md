@@ -1,6 +1,5 @@
-<div align="center">
-## Plugins to make or improve widescreen resolutions support in PC games, add more features and fix bugs.
-</div>
+
+# Plugins to make or improve widescreen resolutions support in PC games, add more features and fix bugs.
 ‎
 A project deploys its built `.asi` into the game folder its key names in a `.env` file in the repository root, so that the paths of a machine stay out of the repository (the file is ignored by git, a game the file does not name is simply not deployed), for example:
 
