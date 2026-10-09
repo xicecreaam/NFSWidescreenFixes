@@ -1,5 +1,5 @@
 
-# Plugins to make or improve widescreen resolutions support in PC games, add more features and fix bugs.
+# Plugins to make or improve widescreen resolutions support in NFS games, add features and fix bugs for speedruns.
 
 A project deploys its built `.asi` into the game folder its key names in a `.env` file in the repository root, so that the paths of a machine stay out of the repository (the file is ignored by git, a game the file does not name is simply not deployed), for example:
 
