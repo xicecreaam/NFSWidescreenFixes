@@ -1,6 +1,3 @@
-// NFS Most Wanted Widescreen Fix: the fix as of August 2022 (WidescreenFixesPack commit 04928650, the last version
-// before SimRate), with FixHUD working in version 1.2 of the game and the gamepad icons in a single
-// NFSMostWanted.WidescreenFix.tpk, as in the current fix. Built with the current libraries of the repository.
 #include "stdafx.h"
 
 struct Screen
@@ -34,7 +31,6 @@ bool* DrawHUD_57CAA8 = (bool*)0x57CAA8;
 
 void updateValues(const float& newWidth, const float& newHeight)
 {
-    //Screen resolution
     Screen.Width = newWidth;
     Screen.Height = newHeight;
     Screen.fWidth = static_cast<float>(Screen.Width);
@@ -45,13 +41,10 @@ void updateValues(const float& newWidth, const float& newHeight)
     Screen.fHudPosX = 640.0f / (640.0f * Screen.fHudScaleX);
     Screen.fShadowRatio = (Screen.fHeight / Screen.fWidth) / 0.85f;
 
-    //Autosculpt scaling
     *AutosculptScale_8AE8F8 = 480.0f * Screen.fAspectRatio;
 
-    //Arrest blur
     *ArrestBlurScale_8AFA08 = (1.0f / 640.0f) * ((4.0f / 3.0f) / Screen.fAspectRatio);
 
-    //Rain droplets
     fRainScaleX = ((0.75f / Screen.fAspectRatio) * (4.0f / 3.0f));
 
     if (bFixFOV)
@@ -88,7 +81,6 @@ HWND WINAPI CreateWindowExA_Hook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpW
 {
     HWND GameHWND = NULL;
 
-    // fix the window to open at the center of the screen...
     int DesktopX = 0;
     int DesktopY = 0;
 
@@ -115,8 +107,6 @@ HWND WINAPI CreateWindowExA_Hook(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpW
     return GameHWND;
 }
 
-// cave at 0x6E726B - in eDisplayFrame
-// for skipping shader recompilation
 uint32_t FastWndReset_Exit_True = 0x6E728D;
 uint32_t FastWndReset_Exit_False = 0x6E7272;
 uint32_t* ResetWnd_982C39 = (uint32_t*)0x00982C39;
@@ -133,8 +123,6 @@ void __declspec(naked) FastWndReset_Cave()
     }
 }
 
-// cave at 0x6E72C6 - in eDisplayFrame
-// at the end of the reset procedure
 uint32_t FastWndReset_Finish_Exit = 0x006E72CD;
 void __declspec(naked) FastWndReset_Finish_Cave()
 {
@@ -166,9 +154,6 @@ LRESULT WINAPI WSFixWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return GameWndProc(hWnd, msg, wParam, lParam);
 }
 
-// Single NFSMostWanted.WidescreenFix.tpk, ported from the current fix (ThirteenAG, commits a69515ec "nfsmw: update tpk"
-// and 17af0782). The tpk adds XBOX_* and PS_* textures next to the game's PC_* ones, and front-end images are switched
-// to them.
 namespace ButtonIcons
 {
     struct FEObject
@@ -348,27 +333,22 @@ void Init()
     Screen.fHudPosX = 640.0f / (640.0f * Screen.fHudScaleX);
     Screen.fShadowRatio = (Screen.fHeight / Screen.fWidth) / 0.85f;
 
-    // 08/2022. - keep memory areas unprotected to allow updating of values without constantly calling VirtualProtect ~ Xan
     DWORD oldprotect = 0;
 
-    //Screen resolution
     for (size_t i = 0; i < 2; i++)
     {
         uint32_t* sub_6C27D0 = hook::pattern("A1 ? ? ? ? 83 F8 05 0F ? ? 00 00 00 FF 24 85 ? ? ? ? 8B 44 24 04").count(1).get(0).get<uint32_t>(0);
         injector::MakeJMP(sub_6C27D0, RacingResolution_Hook, true);
     }
 
-    //Autosculpt scaling
     AutosculptScale_8AE8F8 = *hook::pattern("D8 0D ? ? ? ? DA 74 24 18 E8 ? ? ? ? 89 46 04 EB 03").count(1).get(0).get<float*>(2);
     injector::UnprotectMemory(AutosculptScale_8AE8F8, sizeof(float), oldprotect);
     *AutosculptScale_8AE8F8 = 480.0f * Screen.fAspectRatio;
 
-    //Arrest blur
     ArrestBlurScale_8AFA08 = *hook::pattern("D8 0D ? ? ? ? 8B 4C 24 18 8B 54 24 1C").count(1).get(0).get<float*>(2);
     injector::UnprotectMemory(ArrestBlurScale_8AFA08, sizeof(float), oldprotect);
     *ArrestBlurScale_8AFA08 = (1.0f / 640.0f) * ((4.0f / 3.0f) / Screen.fAspectRatio);
 
-    //Rain droplets
     fRainScaleX = ((0.75f / Screen.fAspectRatio) * (4.0f / 3.0f));
     auto pattern = hook::pattern("D9 44 24 0C D8 44 24 10 8B 4C 24 08 8B 44 24 10 8B D1");
     struct RainDropletsHook
@@ -442,8 +422,6 @@ void Init()
         injector::WriteMemory(dword_6C87BD, ShadowsResX, true);
 
         uint32_t* dword_93D898 = *hook::pattern("A1 ? ? ? ? 49 3D 02 10 00 00 89 0D").count(1).get(0).get<uint32_t*>(1);
-        //char TempStr[10];
-        //sprintf(TempStr, "%x %x %x %x", ((DWORD)dword_93D898 >> 0) & 0xff, ((DWORD)dword_93D898 >> 8) & 0xff, ((DWORD)dword_93D898 >> 16) & 0xff, ((DWORD)dword_93D898 >> 24) & 0xff);
 
         for (size_t i = 0; i < 20; i++)
         {
@@ -478,8 +456,6 @@ void Init()
         //injector::WriteMemory<float>(0x8AF9A0, fHudScaleY, true);
 
         // FE center constant (320.0, 0x894B40 in 1.3, 0x893B40 in 1.2). The 2022 pattern
-        // "D8 25 ? ? ? ? D9 5C 24 14 DB 05 ? ? ? ? D8 25 ? ? ? ? D9 5C 24 1C 74 20" (+2) is in menu mouse code
-        // changed by patch 1.3 and is not found in 1.2. This one is found once in both versions.
         FE_Xpos_894B40 = *hook::pattern("DB 05 ? ? ? ? 56 D8 25").count(1).get(0).get<float*>(9); //0x516870
         injector::UnprotectMemory(FE_Xpos_894B40, sizeof(float), oldprotect);
         *FE_Xpos_894B40 = Screen.fHudPosX;
@@ -682,7 +658,6 @@ void Init()
         injector::WriteMemory<uint32_t>(dword_58D883, 0x5F9001B0, true);
         injector::WriteMemory<uint32_t>(dword_56885A, 0x7401F980, true);
 
-        //Widescreen Splash
         pattern = hook::pattern("8B 46 10 8B 3D ? ? ? ? 53 50");
         injector::MakeNOP(pattern.get_first(-2), 2, true);
         pattern = hook::pattern("E8 ? ? ? ? 84 C0 B8 ? ? ? ? 75 ? B8 ? ? ? ? C3");
@@ -809,11 +784,6 @@ void Init()
 
         if (nImproveGamepadSupport < 3)
         {
-            // Icons: the single NFSMostWanted.WidescreenFix.tpk (named after this .asi) replaces buttons-xbox.tpk and
-            // buttons-playstation.tpk. It is loaded at startup, at the same point and with the same resource type (1)
-            // as the 2022 tpks (the current fix loads it with the first front-end update, type 0; on Carbon, the icons
-            // looked pixelated that way). Every front-end image showing a PC_* texture is then switched to its
-            // XBOX_* or PS_* version.
             ButtonIcons::nMode = nImproveGamepadSupport;
             ButtonIcons::TPKPath = GetThisModulePath<std::string>().substr(GetExeModulePath<std::string>().length()) + std::filesystem::path(GetThisModuleName<std::string>()).replace_extension("tpk").string();
             ButtonIcons::CreateResourceFile = CreateResourceFile;
@@ -1134,8 +1104,6 @@ CEXP void InitializeASI()
 {
     std::call_once(CallbackHandler::flag, []()
         {
-            // Init runs as soon as the pattern is found: at once in 1.3, or at a later call to GetSystemTimeAsFileTime once
-            // the protected 1.2 executable is decrypted (same as the current fix).
             CallbackHandler::RegisterCallbackAtGetSystemTimeAsFileTime(Init, hook::pattern("C7 00 80 02 00 00 C7 01 E0 01 00 00 C2 08 00"));
         });
 }
