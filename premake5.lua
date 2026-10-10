@@ -301,18 +301,10 @@ CommonWorkspaceSetup("Win32", "Win32")
 group "NeedForSpeed"
 project "NFSTheRun.FusionFix"
    setpaths("NEED_FOR_SPEED_THE_RUN_DIR", "Need For Speed The Run.exe", "plugins/")
+-- NFS Carbon and NFS Most Wanted: the 2022 fixes (before SimRate), a single dllmain.cpp each, without post-processing
 project "NFSCarbon.WidescreenFix"
-   add_postfx()
    setpaths("NEED_FOR_SPEED_CARBON_DIR", "NFSC.exe")
 project "NFSMostWanted.WidescreenFix"
-   buildshaders {
-      { files = "source/*/*.fx", args = "/T fx_2_0", ext = ".fxo" }
-   }
-   includedirs { "Resources", "includes/postfx" }
-   files { "includes/postfx/postfxcore.ixx", "source/%{prj.name}/*.fx", "source/%{prj.name}/*.rc" }
-   defines { "IDR_POSTFX=201" }
-   defines { "IDR_AREATEX=202" }
-   defines { "IDR_SEARCHTEX=203" }
    setpaths("NEED_FOR_SPEED_MOST_WANTED_DIR", "speed.exe")
 project "NFSProStreet.FusionFix"
    add_postfx()
