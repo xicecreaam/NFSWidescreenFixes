@@ -455,7 +455,7 @@ void Init()
         //fHudScaleY = *(float*)0x8AF9A0;
         //injector::WriteMemory<float>(0x8AF9A0, fHudScaleY, true);
 
-        // FE center constant (320.0, 0x894B40 in 1.3, 0x893B40 in 1.2). The 2022 pattern
+        // FE center constant (320.0, 0x894B40 in 1.3, 0x893B40 in 1.2)
         FE_Xpos_894B40 = *hook::pattern("DB 05 ? ? ? ? 56 D8 25").count(1).get(0).get<float*>(9); //0x516870
         injector::UnprotectMemory(FE_Xpos_894B40, sizeof(float), oldprotect);
         *FE_Xpos_894B40 = Screen.fHudPosX;
