@@ -1,6 +1,3 @@
-// NFS Carbon Widescreen Fix: the fix as of January 2022 (WidescreenFixesPack commit cd45ca81, before SimRate), with
-// MoviePlaybackFix and DisableMotionBlur from the current fix and the gamepad icons in a single
-// NFSCarbon.WidescreenFix.tpk. Built with the current libraries of the repository.
 #include "stdafx.h"
 
 struct Screen
@@ -43,8 +40,6 @@ namespace MoviePlayback
     }
 }
 
-// Single NFSCarbon.WidescreenFix.tpk, ported from the current fix (ThirteenAG, commit 17af0782, "nfsc: replace tpk").
-// The tpk adds XBOX_* and PS_* textures next to the game's PC_* ones, and front-end images are switched to them.
 namespace ButtonIcons
 {
     struct FEObject
@@ -227,7 +222,6 @@ void Init()
     Screen.fHeight = static_cast<float>(Screen.Height);
     Screen.fAspectRatio = (Screen.fWidth / Screen.fHeight);
 
-    //Resolution
     for (size_t i = 0; i < 2; i++)
     {
         //addresses from MW
@@ -257,23 +251,18 @@ void Init()
         injector::WriteMemory(dword_6C2866, Screen.Height, true);
     }
 
-    //Autosculpt scaling
     uint32_t* dword_9E9B68 = *hook::pattern("D8 0D ? ? ? ? DA 74 24 18 E8 ? ? ? ? 89 46 04 EB 03").count(1).get(0).get<uint32_t*>(2);
     injector::WriteMemory<float>(dword_9E9B68, 480.0f * Screen.fAspectRatio, true);
 
-    //Mouse cursor
     //uint32_t* dword_9E8F84 = *hook::pattern("D8 0D ? ? ? ? DA 74 24 10 DA 64 24 14 E8 ? ? ? ? 89 46 08").count(1).get(0).get<uint32_t*>(2);
     //injector::WriteMemory<float>(dword_9E8F84, (float)Screen.Height, true);
 
-    //Arrest blur
     uint32_t* dword_9D0584 = *hook::pattern("D8 0D ? ? ? ? 8B 4C 24 14 8B 54").count(1).get(0).get<uint32_t*>(2);
     injector::WriteMemory<float>(dword_9D0584, (1.0f / 640.0f) * ((4.0f / 3.0f) / Screen.fAspectRatio), true);
 
-    //Autosave icon
     uint32_t* dword_5CD4B0 = *hook::pattern("FF 24 85 ? ? ? ? 8B 0D ? ? ? ? 8B 11 6A 00 FF 92 98 00 00 00").count(1).get(0).get<uint32_t*>(3);
     injector::WriteMemory(dword_5CD4B0 + 2, hook::pattern("8B CE E8 ? ? ? ? 8B 0D ? ? ? ? 8B F1 E8").count(1).get(0).get<uint32_t*>(0), true);
 
-    //Water Reflections fix
     static uint32_t n768 = 768;
     static uint32_t n320 = 320;
     static uint32_t n240 = 240;
@@ -290,7 +279,6 @@ void Init()
     uint32_t* dword_71A9FC = pattern.count(1).get(0).get<uint32_t>(5);
     injector::MakeNOP(dword_71A9FC, 2, true);
 
-    //EA HD
     uint32_t* dword_9D51D8 = *hook::pattern("6A 01 6A 14 68 ? ? ? ? 8B CE").count(1).get(0).get<uint32_t*>(5);
     uint32_t* dword_5BB83B = hook::pattern("68 ? ? ? ? 68 ? ? ? ? E8 ? ? ? ? 83 C4 08 85 C0").count(5).get(4).get<uint32_t>(1);
     injector::WriteMemory(dword_5BB83B, dword_9D51D8, true);
@@ -301,7 +289,6 @@ void Init()
     injector::WriteMemory(dword_5BD4B0, dword_9D51D8, true);
     injector::WriteMemory(hook::pattern("68 ? ? ? ? E8 ? ? ? ? 8B 4E 0C 50 51").count(3).get(2).get<uint32_t>(1), 0, true);
 
-    //Lighting Fix Update (mirror)
     pattern = hook::pattern("C7 05 ? ? ? ? 01 00 00 00 C7 05 ? ? ? ? 00 00 80");
     uint32_t* dword_72E382 = pattern.count(1).get(0).get<uint32_t>(6);
     injector::WriteMemory(dword_72E382, 0, true);
@@ -333,13 +320,11 @@ void Init()
     pattern = hook::pattern("7E 05 E8 ? ? ? ? E8 ? ? ? ? E8 ? ? ? ? E8");
     injector::MakeNOP(pattern.count(1).get(0).get<uint32_t>(0), 2, true); // 0071B3E6
 
-    //World map cursor
     uint32_t* dword_570DCD = hook::pattern("75 33 D9 44 24 14 D8 5C 24 08 DF E0 F6 C4 41").count(1).get(0).get<uint32_t>(0);
     injector::MakeNOP(dword_570DCD, 2, true);
     uint32_t* dword_570DDC = hook::pattern("7A 24 D9 44 24 18 D8 5C 24 04 DF E0").count(1).get(0).get<uint32_t>(0);
     injector::MakeNOP(dword_570DDC, 2, true);
 
-    //Rain droplets
     static float fRainScaleX = ((0.75f / Screen.fAspectRatio) * (4.0f / 3.0f));
     pattern = hook::pattern("D9 44 24 08 D8 44 24 10 8B 4C 24 0C 8B 44 24 10 8B D1");
     struct RainDropletsHook
@@ -366,10 +351,8 @@ void Init()
         }
     }; injector::MakeInline<RainDropletsYScaleHook>(pattern.get_first(36), pattern.get_first(36 + 8)); //0x722E9C
 
-    //For ini options
     auto GetFolderPathpattern = hook::pattern("50 6A 00 6A 00 68 ? 80 00 00 6A 00");
 
-    //HUD
     if (bFixHUD)
     {
         Screen.fHudScaleX = (1.0f / Screen.Width * (Screen.Height / 480.0f)) * 2.0f;
@@ -499,13 +482,11 @@ void Init()
 
     if (nFMVWidescreenMode)
     {
-        // Widescreen FMV Text Placement
         uint32_t* dword_5AB6D7 = hook::pattern("74 3C ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? 68 D1 BC D5 FF").count(1).get(0).get<uint32_t>(0);
         injector::WriteMemory<uint8_t>(dword_5AB6D7, 0xEB, true);
 
         if (nFMVWidescreenMode > 1)
         {
-            // HD FMV Support
             uint32_t* dword_598EB9 = hook::pattern("68 00 00 80 3F 68 00 00 00 3F 68 00 00 00 3F 68 00 00 00 BF 68 00 00 00 BF 8B CB E8 ? ? ? ? 8B CB C7").count(1).get(0).get<uint32_t>(6);
             injector::WriteMemory<float>((uint32_t)dword_598EB9 + 0, (0.5f / ((4.0f / 3.0f) / (4.0f / 3.0f))), true); // Height (Bottom)
             injector::WriteMemory<float>((uint32_t)dword_598EB9 + 5, (0.5f / ((4.0f / 3.0f) / (16.0f / 9.0f))), true); // Width (Right)
@@ -514,7 +495,6 @@ void Init()
         }
         else
         {
-            // Native Widescreen FMV Support
             uint32_t* dword_5BB818 = hook::pattern("74 6A 8B CE E8 ? ? ? ? 84 C0 75 5F 68 ? ? ? ? 68").count(1).get(0).get<uint32_t>(0);
             injector::MakeNOP(dword_5BB818, 2, true);
             uint32_t* dword_5BD4A1 = hook::pattern("74 0D 68 ? ? ? ? E8 ? ? ? ? 5E 59 C3").count(1).get(0).get<uint32_t>(0);
@@ -671,10 +651,6 @@ void Init()
 
         if (nImproveGamepadSupport < 3)
         {
-            // Icons: the single NFSCarbon.WidescreenFix.tpk (named after this .asi) is loaded at startup, at the same point
-            // and with the same resource type (1) as the 2022 tpks. The current fix loads it with the first front-end update
-            // (type 0), and the icons looked pixelated that way. Every front-end image showing a PC_* texture is then
-            // switched to its XBOX_* or PS_* version.
             ButtonIcons::nMode = nImproveGamepadSupport;
             ButtonIcons::TPKPath = GetThisModulePath<std::string>().substr(GetExeModulePath<std::string>().length()) + std::filesystem::path(GetThisModuleName<std::string>()).replace_extension("tpk").string();
             ButtonIcons::CreateResourceFile = CreateResourceFile;
