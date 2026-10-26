@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <intrin.h>
 
 struct Screen
 {
@@ -41,9 +42,9 @@ void updateValues(const float& newWidth, const float& newHeight)
     Screen.fHudPosX = 640.0f / (640.0f * Screen.fHudScaleX);
     Screen.fShadowRatio = (Screen.fHeight / Screen.fWidth) / 0.85f;
 
-    *AutosculptScale_8AE8F8 = 480.0f * Screen.fAspectRatio;
+    injector::WriteMemory<float>(AutosculptScale_8AE8F8, 480.0f * Screen.fAspectRatio, true);
 
-    *ArrestBlurScale_8AFA08 = (1.0f / 640.0f) * ((4.0f / 3.0f) / Screen.fAspectRatio);
+    injector::WriteMemory<float>(ArrestBlurScale_8AFA08, (1.0f / 640.0f) * ((4.0f / 3.0f) / Screen.fAspectRatio), true);
 
     fRainScaleX = ((0.75f / Screen.fAspectRatio) * (4.0f / 3.0f));
 
@@ -56,8 +57,8 @@ void updateValues(const float& newWidth, const float& newHeight)
 
     if (bFixHUD)
     {
-        *HudScaleX_8AF9A4 = Screen.fHudScaleX;
-        *FE_Xpos_894B40 = Screen.fHudPosX;
+        injector::WriteMemory<float>(HudScaleX_8AF9A4, Screen.fHudScaleX, true);
+        injector::WriteMemory<float>(FE_Xpos_894B40, Screen.fHudPosX, true);
     }
 }
 
@@ -1109,10 +1110,48 @@ void Init()
     }
 }
 
+namespace SingleCoreAffinity
+{
+    constexpr DWORD_PTR Mask = 1; // CPU 0
+
+    SafetyHookInline shCreateThread{};
+    uintptr_t exeStart = 0, exeEnd = 0;
+
+    HANDLE WINAPI CreateThreadHook(LPSECURITY_ATTRIBUTES sa, SIZE_T stack, LPTHREAD_START_ROUTINE start, LPVOID param, DWORD flags, LPDWORD id)
+    {
+        auto caller = reinterpret_cast<uintptr_t>(_ReturnAddress());
+        bool fromGame = caller >= exeStart && caller < exeEnd;
+
+        HANDLE h = shCreateThread.stdcall<HANDLE>(sa, stack, start, param, fromGame ? (flags | CREATE_SUSPENDED) : flags, id);
+        if (h && fromGame)
+        {
+            SetThreadAffinityMask(h, Mask);
+            if (!(flags & CREATE_SUSPENDED))
+                ResumeThread(h);
+        }
+        return h;
+    }
+
+    void Install()
+    {
+        auto exe = reinterpret_cast<uintptr_t>(GetModuleHandle(nullptr));
+        auto nt = reinterpret_cast<PIMAGE_NT_HEADERS>(exe + reinterpret_cast<PIMAGE_DOS_HEADER>(exe)->e_lfanew);
+        exeStart = exe;
+        exeEnd = exe + nt->OptionalHeader.SizeOfImage;
+
+        SetThreadAffinityMask(GetCurrentThread(), Mask);
+        shCreateThread = safetyhook::create_inline(CreateThread, CreateThreadHook);
+    }
+}
+
 CEXP void InitializeASI()
 {
     std::call_once(CallbackHandler::flag, []()
         {
+            CIniReader iniReader("");
+            if (iniReader.ReadInteger("MISC", "SingleCoreAffinity", 0) != 0)
+                SingleCoreAffinity::Install();
+
             CallbackHandler::RegisterCallbackAtGetSystemTimeAsFileTime(Init, hook::pattern("C7 00 80 02 00 00 C7 01 E0 01 00 00 C2 08 00"));
         });
 }
